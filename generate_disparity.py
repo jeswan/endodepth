@@ -9,6 +9,7 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 import PIL.Image as Image
+from concurrent.futures import ThreadPoolExecutor
 
 # GIF
 import glob
@@ -67,6 +68,7 @@ def process_dataset(left_dir, right_dir, output_dir, algo="BM_POST", **kwargs):
     left_images.sort()
     right_images.sort()
 
+    executor = ThreadPoolExecutor()
     for params in product_dict(**kwargs):
         for i in range(len(left_images)):
             left_image_path = os.path.join(left_dir, left_images[i])
@@ -74,18 +76,7 @@ def process_dataset(left_dir, right_dir, output_dir, algo="BM_POST", **kwargs):
             imgL = cv2.imread(left_image_path, cv2.IMREAD_GRAYSCALE)
             imgR = cv2.imread(right_image_path, cv2.IMREAD_GRAYSCALE)
 
-            if algo == "BM":
-                process_frame_BM(imgL, imgR, left_images[i].split(
-                    '.')[0], output_dir=output_dir, **params)
-            elif algo == "SGBM":
-                process_frame_SGBM(imgL, imgR, left_images[i].split(
-                    '.')[0], output_dir=output_dir, **params)
-            elif algo == "BM_POST":
-                process_frame_BM_postproc(
-                    imgL, imgR, left_images[i].split('.')[0], output_dir=output_dir, **params)
-            elif algo == "SGBM_POST":
-                process_frame_SGBM_postproc(imgL, imgR, left_images[i].split(
-                    '.')[0], output_dir=output_dir, **params)
+            executor.submit(process_frame_BM_postproc, imgL, imgR, left_images[i].split('.')[0], output_dir=output_dir, **params)
         # createGifs()
 
 
